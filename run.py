@@ -2,7 +2,7 @@ import pandas as pd
 from evidently.report import Report
 from evidently.metric_preset import DataDriftPreset, DataQualityPreset
 from evidently import ColumnMapping
-from evidently.metrics import DatasetDriftMetric
+from evidently.metrics import DatasetDriftMetric, ColumnDriftMetric
 
 # Define features
 features = [
@@ -46,17 +46,37 @@ column_mapping = ColumnMapping(
     target=None
 )
 
-# Create Evidently report with DatasetDriftMetric
-report = Report(metrics=[DatasetDriftMetric()])
+# Create Evidently report with DatasetDriftMetric for CLI output (original logic)
+cli_report = Report(metrics=[DatasetDriftMetric()])
 
 try:
-    report.run(
+    cli_report.run(
         reference_data=reference,
         current_data=inference,
         column_mapping=column_mapping
     )
-    # Getting the calculated metrics output in dict
-    metrics_dict = report.as_dict()
+    # Getting the calculated metrics output in dict (original logic)
+    metrics_dict = cli_report.as_dict()
+    print("=== CLI DRIFT METRICS ===")
     print(metrics_dict)
+    
+    # Create comprehensive report for HTML
+    html_report = Report(metrics=[
+        DataDriftPreset(),
+        DataQualityPreset()
+    ])
+    
+    html_report.run(
+        reference_data=reference,
+        current_data=inference,
+        column_mapping=column_mapping
+    )
+    
+    # Generate comprehensive HTML report
+    html_report.save_html("evidently_report.html")
+    print("\n=== HTML REPORT GENERATED ===")
+    print("Comprehensive Evidently report has been saved to 'evidently_report.html'")
+    print("Open this file in your browser to view the full report with data drift and quality metrics")
+    
 except Exception as e:
     print(f"Evidently report failed: {e}")
